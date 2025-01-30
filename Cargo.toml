@@ -1,8 +1,8 @@
 [package]
 name = "xdelta3"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["liushuyu <liushuyu011@gmail.com>", "Kay Lin <i@v2bv.net>", "Barrow099 <barrow099@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "Apache-2.0"
 description = "Rust binding for xdelta3"
 keywords = ["xdelta", "patch", "vcdiff"]

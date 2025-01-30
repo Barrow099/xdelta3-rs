@@ -43,13 +43,16 @@ fn main() {
         let mut builder = cc::Build::new();
         builder.include("xdelta3/xdelta3");
         for (key, val) in &defines {
+            println!("cargo:warning=({}={})", key, val);
             builder.define(&key, Some(val.as_str()));
         }
 
+        println!("cargo:warning=compiling");
         builder
             .file("xdelta3/xdelta3/xdelta3.c")
             .warnings(false)
             .compile("xdelta3");
+        println!("cargo:warning=compiling done");
     }
 
     {
@@ -58,11 +61,12 @@ fn main() {
         for (key, val) in &defines {
             builder = builder.clang_arg(format!("-D{}={}", key, val));
         }
+
         let bindings = builder
             .header("xdelta3/xdelta3/xdelta3.h")
-            .parse_callbacks(Box::new(bindgen::CargoCallbacks))
-            .whitelist_function("xd3_.*")
-            .whitelist_type("xd3_.*")
+            .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+            .allowlist_function("xd3_.*")
+            .allowlist_type("xd3_.*")
             .rustified_enum("xd3_.*")
             .generate()
             .expect("Unable to generate bindings");
@@ -82,13 +86,13 @@ fn check_native_size(name: &str) -> String {
     let mut compile = Command::new(compiler.path().as_os_str());
     let test_code = format!("#include <stdint.h>\n#include <stdio.h>\nint main() {{printf(\"%lu\", sizeof({})); return 0;}}\n", name);
     // didn't use tempfile since tempfile was having issues on Windows
-    let mut rng = rand::thread_rng();
-    let test_binary_fn = format!("{}/test-{}", out_dir, rng.gen::<i32>());
+    let mut rng = rand::rng();
+    let test_binary_fn = format!("{}/test-{}", out_dir, rng.random::<i32>());
 
     #[cfg(windows)]
     let test_binary_fn = format!("{}.exe", test_binary_fn);
 
-    let test_source_fn = format!("{}/test-{:x}.c", out_dir, rng.gen::<i32>());
+    let test_source_fn = format!("{}/test-{:x}.c", out_dir, rng.random::<i32>());
     let mut test_source = File::create(&test_source_fn).expect("Error creating test compile files");
 
     compile.args(compiler.args()).current_dir(out_dir);
@@ -114,5 +118,5 @@ fn check_native_size(name: &str) -> String {
         .stdout;
     let output = String::from_utf8(output).expect("Error converting Unicode sequence");
     remove_file(test_binary_fn).ok();
-    return output;
+    output
 }
