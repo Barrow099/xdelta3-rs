@@ -33,14 +33,16 @@ fn main() {
     add_def(&mut defines, "XD3_WIN32", "1");
     add_def(&mut defines, "SHELL_TESTS", "0");
 
+    let mut builder = cc::Build::new();
+
     #[cfg(feature = "lzma")]
     {
         add_def(&mut defines, "SECONDARY_LZMA", "1");
-        pkg_config::Config::new().probe("liblzma").unwrap();
+        let liblzma = pkg_config::Config::new().probe("liblzma").unwrap();
+        builder.includes(&liblzma.include_paths);
     }
 
     {
-        let mut builder = cc::Build::new();
         builder.include("xdelta3/xdelta3");
         builder.std("c11");
         builder.define("static_assert", Some("_Static_assert"));
@@ -64,7 +66,9 @@ fn main() {
 
         let bindings = builder
             .header("xdelta3/xdelta3/xdelta3.h")
-            .parse_callbacks(Box::new(bindgen::CargoCallbacks::new().rerun_on_header_files(false)))
+            .parse_callbacks(Box::new(
+                bindgen::CargoCallbacks::new().rerun_on_header_files(false),
+            ))
             .allowlist_function("xd3_.*")
             .allowlist_type("xd3_.*")
             .rustified_enum("xd3_.*")
