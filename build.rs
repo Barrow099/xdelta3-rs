@@ -42,29 +42,29 @@ fn main() {
     {
         let mut builder = cc::Build::new();
         builder.include("xdelta3/xdelta3");
+        builder.std("c11");
+        builder.define("static_assert", Some("_Static_assert"));
         for (key, val) in &defines {
-            println!("cargo:warning=({}={})", key, val);
             builder.define(&key, Some(val.as_str()));
         }
 
-        println!("cargo:warning=compiling");
         builder
             .file("xdelta3/xdelta3/xdelta3.c")
             .warnings(false)
             .compile("xdelta3");
-        println!("cargo:warning=compiling done");
     }
 
     {
         let mut builder = bindgen::Builder::default();
-
+        builder = builder.clang_arg("--std=c11");
+        builder = builder.clang_arg("-Dstatic_assert=_Static_assert");
         for (key, val) in &defines {
             builder = builder.clang_arg(format!("-D{}={}", key, val));
         }
 
         let bindings = builder
             .header("xdelta3/xdelta3/xdelta3.h")
-            .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+            .parse_callbacks(Box::new(bindgen::CargoCallbacks::new().rerun_on_header_files(false)))
             .allowlist_function("xd3_.*")
             .allowlist_type("xd3_.*")
             .rustified_enum("xd3_.*")
