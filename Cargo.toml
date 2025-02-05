@@ -1,6 +1,6 @@
 [package]
 name = "xdelta3"
-version = "0.1.7"
+version = "0.1.8"
 authors = ["liushuyu <liushuyu011@gmail.com>", "Kay Lin <i@v2bv.net>", "Barrow099 <barrow099@gmail.com>"]
 edition = "2021"
 license = "Apache-2.0"
